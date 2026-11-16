@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User
+from .models import User, Invitation
 # Register your models here.
 
 
@@ -72,3 +72,13 @@ class CustomUserAdmin(UserAdmin):
         ),
     }),
 )
+
+
+
+
+
+@admin.register(Invitation)
+class InvitationAdmin(admin.ModelAdmin):
+    list_display = [
+        'role', 'created_by', 'is_used'
+    ]

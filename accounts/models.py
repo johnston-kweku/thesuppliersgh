@@ -1,6 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-import random, string
+from django.conf import settings
+from django.utils import timezone 
+from datetime import timedelta
+import random, string, uuid
+
 # Create your models here.
 
 
@@ -44,3 +48,21 @@ class User(AbstractUser):
             self.username = self.public_id
 
         return super().save(*args, **kwargs)
+
+
+
+def default_expiry():
+    return timezone.now() + timedelta(hours=48)
+
+class Invitation(models.Model):
+    token = models.UUIDField(unique=True, default=uuid.uuid4, )
+    role = models.CharField(max_length=15, choices=User.Role.choices, )
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='created_by')
+    used_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='used_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+    used_at = models.DateTimeField(null=True)
+    is_used = models.BooleanField(default=False)
+    expires_at = models.DateTimeField(default=default_expiry)
+
+    def is_valid(self):
+        return not self.is_used and self.expires_at > timezone.now()
