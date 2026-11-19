@@ -4,8 +4,6 @@ from .models import User, Invitation
 
 
 def registration_view(request):
-
-
     ROLE_TEMPLATES = {
         User.Role.ADMIN: 'registration/admin_sign_up.html',
         User.Role.CUSTOMER: 'registration/customer_sign_up.html',
@@ -14,4 +12,7 @@ def registration_view(request):
 
 
     token = request.GET.get('token', '')
+    if not token:
+        role = User.Role.CUSTOMER
+        
     if request.method == 'POST': pass
