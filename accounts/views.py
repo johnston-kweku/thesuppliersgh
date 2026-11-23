@@ -1,8 +1,23 @@
 from django.shortcuts import render, redirect
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.http import Http404
 from .models import User, Invitation
 # Create your views here.
+
+
+
+def home(request):
+    return render(request, 'accounts/index.html')
+
+
+
+def login(request):
+    return render(request, 'accounts/login.html')
+
+
+
+
+
 
 
 def registration_view(request):
@@ -16,22 +31,32 @@ def registration_view(request):
     if request.method == 'GET': 
         token = request.GET.get('token', '')
         if not token:
-            role = User.Role.CUSTOMER
-            return render(request, ROLE_TEMPLATES.get(role))
+            return render(request, ROLE_TEMPLATES[User.Role.CUSTOMER])
 
         try:
             invitation = Invitation.objects.get(token=token)
-        except Invitation.DoesNotExist:
+        except (Invitation.DoesNotExist, ValidationError):
             raise
         
-        if invitation.is_valid():
-            role = invitation.role
-            return render(request, ROLE_TEMPLATES.get(role))
-        else:
-            raise PermissionDenied('The invitaion token has either expired or has been\
-                                    used already. Please contact admin for support')
+        if not invitation.is_valid():
+            return redirect('accounts:invalid_invite')
+
+        context = {
+            'token': token
+        }
+
+        registration_role = invitation.role
+        return render(request, ROLE_TEMPLATES[registration_role])
 
 
 
 
-    if request.method == 'POST': pass
+
+
+
+
+
+def invalid_invite(request):
+    return render(request, 'errors/invalid_invite.html')
+
+
